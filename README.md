@@ -36,13 +36,13 @@ docker build -t mcp-repl .
 
 ### Run the Container
 
-Start the MCP server using:
+Start both the MCP server and ingestion API using:
 
 ```bash
-docker run -p 8000:8000 mcp-repl
+docker run -d -v mcp-repl:/app/data -p 8000:8000 mcp-repl
 ```
 
-The server will be exposed on port `8000`.
+Both the MCP server and ingestion API will be exposed on port `8000`.
 
 ## Usage Example
 
@@ -59,7 +59,7 @@ uv run src/mcp_repl/server.py
 Open a separate terminal and run:
 
 ```bash
-uv run scripts/client.py
+uv run examples/client.py
 ```
 
 **Expected Output:**
