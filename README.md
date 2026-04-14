@@ -1,4 +1,4 @@
-# mcp-repl
+# mcp-python-repl
 
 An MCP server running on streamable-http with a Python REPL tool.
 
