@@ -18,6 +18,14 @@ uv sync
 
 If you prefer to run the application in an isolated container, Docker is supported out of the box.
 
+### Customizing the REPL Environment
+
+If you need specific Python packages available within the REPL environment, you can add them before building the docker image using `uv add`:
+
+```bash
+uv add <library-name>
+```
+
 ### Build the Image
 
 Build the Docker container with the following command:
