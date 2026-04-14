@@ -7,13 +7,13 @@ Before running this client, ensure the server is started:
 import asyncio
 
 from mcp import ClientSession
-from mcp.client.streamable_http import streamable_http_client
+from mcp.client.sse import sse_client
 
 
 async def run():
     """Run the streamable http client example."""
-    print("Connecting to streamable-http server at http://localhost:8000/mcp/ ...")
-    async with streamable_http_client("http://localhost:8000/mcp/") as (read, write, _):
+    print("Connecting to streamable-http server at http://localhost:8000/mcp/sse ...")
+    async with sse_client("http://localhost:8000/mcp/sse") as (read, write):
         async with ClientSession(read, write) as session:
             # Initialize the connection
             await session.initialize()

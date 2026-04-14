@@ -44,9 +44,40 @@ docker run -d -v mcp-repl:/app/data -p 8000:8000 mcp-repl
 
 Both the MCP server and ingestion API will be exposed on port `8000`.
 
-## Usage Example
+## FastMCP and FastAPI Integration
 
-To test the MCP server, you can use the provided client script which connects to the streamable HTTP endpoint and executes Python code using the REPL tool.
+This application leverages **FastMCP** integrated with **FastAPI** to provide both the MCP server and custom REST endpoints on the same port (8000). The MCP server uses a `sse` (Server-Sent Events) transport when used with **FastAPI**.
+- **`src/mcp_repl/server.py`**: Defines the `FastMCP` server, registers the `execute_python_code` tool (which dynamically executes Python 3 code and captures standard output), and configures the `streamable-http` transport.
+- **`src/mcp_repl/api.py`**: A FastAPI application that provides additional endpoints (`/upload` for PDF ingestion and validation, `/status` for health checks) and mounts the FastMCP server's SSE application at the `/mcp` route.
+
+> [!WARNING]
+> **No Security Layer Added**: This project currently does not implement any authentication, authorization, or secure sandboxing boundaries. The `execute_python_code` tool allows arbitrary Python code execution on the host machine or container, and all endpoints are publicly unauthenticated. You **must** manage and implement your own security and proxy layers before deploying this in a production or publicly exposed environment.
+
+## Usage Examples
+
+We provide several example scripts in the `examples/` directory to demonstrate various interactions with the application.
+
+### 1. API Alive Check (`examples/api_alive.py`)
+
+A simple script to check if the server is up and verify the endpoints.
+
+```bash
+uv run python examples/api_alive.py
+```
+**Explanation:** This script performs an HTTP GET request to the `/status` endpoint to securely confirm the server is "Online" and to fetch the base mounting path for MCP operations.
+
+### 2. File Ingestion (`examples/ingestion.py`)
+
+A script to test the `/upload` endpoint, demonstrating file ingestion into the server.
+
+```bash
+uv run python examples/ingestion.py
+```
+**Explanation:** This script makes HTTP POST requests to upload sample files. It demonstrates the validation process ensuring only valid `.pdf` files are successfully saved to an isolated `/app/data` directory, while non-PDF files return errors.
+
+### 3. MCP Client (`examples/client.py`)
+
+A full working MCP client that communicates with the MCP Server to discover tools and request tool execution.
 
 **1. Start the Server** (if not using Docker):
 
@@ -56,12 +87,8 @@ uv run src/mcp_repl/server.py
 
 **2. Run the Client Script**
 
-Open a separate terminal and run:
-
 ```bash
-uv run examples/client.py
+uv run python examples/client.py
 ```
 
-**Expected Output:**
-
-The client connection handles initialization and testing. You should see output indicating successful connection, a list of available tools including `execute_python_code`, and the result of the test script (for example, showing `2 + 3 = 5`).
+**Explanation:** This client connects to the streamable HTTP endpoint (`http://localhost:8000/mcp/sse`), initializing a continuous `sse_client` session. It queries the server for the list of available tools, and specifically invokes the `execute_python_code` tool to run python strings dynamically on the server, collecting and streaming back the output.

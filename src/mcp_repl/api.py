@@ -42,4 +42,4 @@ async def status():
     """Simple checking route."""
     return {"status": "Online", "mcp_endpoint": "/mcp"}
 
-app.mount("/mcp/", mcp.streamable_http_app())
+app.mount("/mcp", mcp.sse_app())
