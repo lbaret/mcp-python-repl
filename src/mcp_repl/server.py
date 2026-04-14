@@ -5,8 +5,7 @@ import traceback
 from mcp.server.fastmcp import FastMCP
 
 # Create an MCP server
-mcp = FastMCP("Python REPL", json_response=True)
-
+mcp = FastMCP("Python-REPL", json_response=True, port=8000, host="0.0.0.0")
 
 # Python REPL tool
 @mcp.tool()
