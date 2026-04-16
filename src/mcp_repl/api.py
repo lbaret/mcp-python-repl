@@ -37,6 +37,59 @@ async def upload_file(file: UploadFile):
         "info": f"File {file.filename} uploaded successfully.",
     }
 
+@app.get("/files")
+async def list_files():
+    """
+    List all PDF files in the data directory.
+
+    This endpoint scans the local data directory for PDF files and returns a list of their filenames.
+
+    Returns:
+        dict: A dictionary containing a list of PDF filenames.
+    """
+    data_dir = "/app/data"
+
+    if not os.path.exists(data_dir):
+        return {"error": f"Directory '{data_dir}' does not exist."}
+
+    try:
+        pdf_files = [
+            f
+            for f in os.listdir(data_dir)
+            if os.path.isfile(os.path.join(data_dir, f)) and f.lower().endswith(".pdf")
+        ]
+
+        return {"files": pdf_files}
+
+    except Exception as e:
+        return {"error": f"Error listing files: {str(e)}"}
+
+
+@app.delete("/files/{filename}")
+async def delete_file(filename: str):
+    """
+    Delete a PDF file from the data directory.
+
+    This endpoint deletes a specific PDF file from the local data directory.
+
+    Args:
+        filename (str): The name of the file to delete.
+
+    Returns:
+        dict: A dictionary containing a success message or an error message.
+    """
+    filepath = f"/app/data/{filename}"
+
+    if not os.path.exists(filepath):
+        return {"error": f"File {filename} does not exist."}
+
+    try:
+        os.remove(filepath)
+        return {"info": f"File {filename} deleted successfully."}
+    except Exception as e:
+        return {"error": f"Error deleting file: {str(e)}"}
+
+
 @app.get("/status")
 async def status():
     """Simple checking route."""

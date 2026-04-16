@@ -47,11 +47,11 @@ Both the MCP server and ingestion API will be exposed on port `8000`.
 ## FastMCP and FastAPI Integration
 
 This application leverages **FastMCP** integrated with **FastAPI** to provide both the MCP server and custom REST endpoints on the same port (8000). The MCP server uses a `sse` (Server-Sent Events) transport when used with **FastAPI**.
-- **`src/mcp_repl/server.py`**: Defines the `FastMCP` server, registers the `execute_python_code` tool (which dynamically executes Python 3 code and captures standard output), and configures the `streamable-http` transport.
-- **`src/mcp_repl/api.py`**: A FastAPI application that provides additional endpoints (`/upload` for PDF ingestion and validation, `/status` for health checks) and mounts the FastMCP server's SSE application at the `/mcp` route.
+- **`src/mcp_repl/server.py`**: Defines the `FastMCP` server, registers the `python_interpreter` tool (which dynamically executes Python 3 code and captures standard output) and the `list_files` tool (which discovers PDF documents), and configures the `streamable-http` transport.
+- **`src/mcp_repl/api.py`**: A FastAPI application that provides additional endpoints (`/upload` for PDF ingestion and validation, `GET /files` for listing and `DELETE /files/{filename}` for deleting ingested PDF documents, `/status` for health checks) and mounts the FastMCP server's SSE application at the `/mcp` route.
 
 > [!WARNING]
-> **No Security Layer Added**: This project currently does not implement any authentication, authorization, or secure sandboxing boundaries. The `execute_python_code` tool allows arbitrary Python code execution on the host machine or container, and all endpoints are publicly unauthenticated. You **must** manage and implement your own security and proxy layers before deploying this in a production or publicly exposed environment.
+> **No Security Layer Added**: This project currently does not implement any authentication, authorization, or secure sandboxing boundaries. The `python_interpreter` tool allows arbitrary Python code execution on the host machine or container, and all endpoints are publicly unauthenticated. You **must** manage and implement your own security and proxy layers before deploying this in a production or publicly exposed environment.
 
 ## Usage Examples
 
@@ -91,4 +91,4 @@ uv run src/mcp_repl/server.py
 uv run python examples/client.py
 ```
 
-**Explanation:** This client connects to the streamable HTTP endpoint (`http://localhost:8000/mcp/sse`), initializing a continuous `sse_client` session. It queries the server for the list of available tools, and specifically invokes the `execute_python_code` tool to run python strings dynamically on the server, collecting and streaming back the output.
+**Explanation:** This client connects to the streamable HTTP endpoint (`http://localhost:8000/mcp/sse`), initializing a continuous `sse_client` session. It queries the server for the list of available tools, and specifically invokes tools such as `python_interpreter` to run python strings dynamically on the server or `list_files` to interact with files, collecting and streaming back the output.
