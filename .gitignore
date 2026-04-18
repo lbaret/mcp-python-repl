@@ -12,3 +12,6 @@ uv.lock
 
 # Notebooks
 notebooks/
+
+# Marimo artefacts
+__marimo__/
