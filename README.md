@@ -14,6 +14,12 @@ This project uses `uv` as its package manager. To get started locally:
 uv sync
 ```
 
+4. Optionally, install the development dependencies (like `marimo` and `ollama`) defined in `pyproject.toml`:
+
+```bash
+uv sync --group dev
+```
+
 ## Docker
 
 If you prefer to run the application in an isolated container, Docker is supported out of the box.
@@ -92,3 +98,19 @@ uv run python examples/client.py
 ```
 
 **Explanation:** This client connects to the streamable HTTP endpoint (`http://localhost:8000/mcp/sse`), initializing a continuous `sse_client` session. It queries the server for the list of available tools, and specifically invokes tools such as `python_interpreter` to run python strings dynamically on the server or `list_files` to interact with files, collecting and streaming back the output.
+
+### 4. Marimo Ollama Chatbot (`examples/marimo_ollama.py`)
+
+An interactive notebook built with `marimo` that integrates with `ollama` to provide a chatbot interface.
+
+To run this example, you must install the development dependencies and ensure Ollama is running locally with the expected model.
+
+```bash
+uv run marimo edit examples/marimo_ollama.py
+```
+
+**Explanation:** This command opens a browser-based notebook interface. From there, you can explore the notebook's cells, check how the tools are implemented, and interact with the chatbot.
+
+## Known Issues
+
+- **Marimo Ollama Chatbot (`examples/marimo_ollama.py`)**: The chatbot implementation is currently a work in progress. There are known issues related to chat history formatting and `marimo` UI chat components, which are actively being worked on.

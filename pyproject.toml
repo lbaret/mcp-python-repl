@@ -23,4 +23,6 @@ packages = ["src"]
 [dependency-groups]
 dev = [
     "ipykernel>=7.2.0",
+    "marimo>=0.23.1",
+    "ollama>=0.6.1",
 ]
