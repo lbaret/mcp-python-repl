@@ -111,6 +111,12 @@ uv run marimo edit examples/marimo_ollama.py
 
 **Explanation:** This command opens a browser-based notebook interface. From there, you can explore the notebook's cells, check how the tools are implemented, and interact with the chatbot.
 
-## Known Issues
+## Lessons Learned: OpenAI Tool Calling Message Formatting
 
-- **Marimo Ollama Chatbot (`examples/marimo_ollama.py`)**: The chatbot implementation is currently a work in progress. There are known issues related to chat history formatting and `marimo` UI chat components, which are actively being worked on.
+When integrating local or custom LLMs with tool-calling capabilities (such as Gemma models via Ollama) into a standard OpenAI-like messaging interface, strict adherence to the expected payload schemas is crucial.
+
+Here are key takeaways related to message format compliance when managing chat histories with tool calls:
+
+- **Use Arrays for Tool Calls**: An assistant message invoking tools must include a `tool_calls` key populated with an array of tool call dictionaries (e.g., `[tool_call_message]`), rather than a singular object key.
+- **Synthesize Missing IDs**: Every tool call must possess a unique `id`. Some local inference engines omit this ID in their raw responses. You must inject or synthesize one (e.g., `call_0`, `call_1`) to satisfy standard API schemas and properly link a tool request to its corresponding output.
+- **Proper Tool Responses**: When supplying the output of a tool request back to the system, the message role must be exactly `"tool"`. This message must contain a `tool_call_id` mirroring the ID of the requested tool call, and a `name` key matching the invoked function's name.
