@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.23.1"
+__generated_with = "0.23.2"
 app = marimo.App(width="medium")
 
 
@@ -52,14 +52,13 @@ def _(mo):
 def _():
     import os
     import re
+    import warnings
     from functools import partial
 
     import marimo as mo
     import ollama
     from mcp import ClientSession
     from mcp.client.sse import sse_client
-
-    import warnings
     warnings.filterwarnings('ignore')
     return ClientSession, mo, ollama, partial, sse_client
 
@@ -74,6 +73,10 @@ def _(mo):
 
 @app.cell
 def _(ClientSession, mo, ollama, sse_client):
+    class MessagesRecords:
+        def __init__(self):
+            self.messages = []
+
     def pull_with_marimo_progress(model_name: str, client: ollama.Client) -> None:
         try:
             need_download = True
@@ -110,6 +113,7 @@ def _(ClientSession, mo, ollama, sse_client):
         messages,
         config,
         client,
+        records,
         model_name="gemma4:26b",
     ) -> str:
         sse_ctx = sse_client("http://localhost:8000/mcp/sse")
@@ -125,24 +129,26 @@ def _(ClientSession, mo, ollama, sse_client):
         then give the user only the filename found. Do not add additional details. 
         If the tool output is empty ask the user to try again. Here is the tool output: """
 
-        messages = [
+        current_messages = [
             {
                 "role": "system",
-                "content": "You MUST provide an answer to the user query. You have the option to call tools, and if you have a response from a tool you MUST build a new response inserting tool query."
+                "content": "You MUST provide an answer to the user query. You have the option to call tools, and if you have a response from a tool you MUST build a new response inserting tool query.",
             },
         ]
 
-        messages += [
-            {"role": msg.role, "content": msg.content} for msg in messages
-        ]
+        for msg in messages:
+            role = getattr(msg, "role", None) or (
+                msg.get("role", "") if isinstance(msg, dict) else ""
+            )
+            content = getattr(msg, "content", None) or (
+                msg.get("content", "") if isinstance(msg, dict) else ""
+            )
+            current_messages.append({"role": role, "content": content})
 
         response = client.chat(
             model=model_name,
-            messages=messages,
+            messages=current_messages,
             tools=tools,
-            options={
-                "temperature": 0.,
-            }
         )
 
         if response.message.tool_calls:
@@ -153,36 +159,50 @@ def _(ClientSession, mo, ollama, sse_client):
                     raise ValueError(f"Tool `{tool_call.function.name}` is not recognized")
 
                 tool_call_message = tool_call.copy().dict()
-                messages.append(
+                if "id" not in tool_call_message:
+                    tool_call_message["id"] = f"call_{tool_call_id}"
+
+                current_messages.append(
                     {
                         "role": "assistant",
                         "content": None,
-                        "tool_call": tool_call_message
+                        "tool_calls": [tool_call_message],
                     }
                 )
-                messages.append(
+                current_messages.append(
                     {
                         "role": "tool",
-                        "tool_name": tool_call.function.name,
-                        "content": tool_init_prompt + result.content[0].text
+                        "tool_call_id": tool_call_message.get(
+                            "id", f"call_{tool_call_id}"
+                        ),
+                        "name": tool_call.function.name,
+                        "content": tool_init_prompt + result.content[0].text,
                     }
                 )
 
             # Retrieve final chat completion with the gathered history  
             response = client.chat(
                 model=model_name,
-                messages=messages,
+                messages=current_messages,
                 tools=tools,
-                options={
-                    "temperature": 0.,
-                }
             )
+
+        current_messages.append(
+            {
+                "role": "assistant",
+                "content": response.message.content
+                if response.message.content
+                else "<Empty Response>",
+            }
+        )
+
+        records.messages = current_messages.copy()
 
         await session_ctx.__aexit__(None, None, None)
         await sse_ctx.__aexit__(None, None, None)
         return response.message.content if response.message.content else "<Empty Response>"
 
-    return call_llm, pull_with_marimo_progress
+    return MessagesRecords, call_llm, pull_with_marimo_progress
 
 
 @app.cell(hide_code=True)
@@ -212,34 +232,35 @@ def _(ollama, pull_with_marimo_progress):
 def _(mo):
     mo.md(r"""
     ## Chat
-
-    Here you can test to chat with the model.
-    If you need to debug model flow, you can use `chat_records.messages`.
     """)
     return
 
 
 @app.cell
-def _(call_llm, client, mo, model_name, partial):
-    initial_user_query = "Please write and execute a python code to multiply 2 random numbers. Once the tool has executed, write a short response providing the answer in a markdown format."
+def _(MessagesRecords, call_llm, client, mo, model_name, partial):
+    initial_user_query = "Please write and execute a python code to multiply 2 random integer numbers. Once the tool has been executed, write a short response providing the answer in a markdown format."
+
+    records = MessagesRecords()
 
     chatbot = mo.ui.chat(
-        partial(
-            call_llm,
-            client=client,
-            model_name=model_name
-        ),
+        partial(call_llm, client=client, records=records, model_name=model_name),
         prompts=[initial_user_query],
         show_configuration_controls=False,
         allow_attachments=False,
     )
     chatbot
-    return (chatbot,)
+    return chatbot, records
 
 
 @app.cell
 def _(chatbot):
     chatbot.value
+    return
+
+
+@app.cell
+def _(records):
+    records.messages
     return
 
 
