@@ -53,7 +53,7 @@ Both the MCP server and ingestion API will be exposed on port `8000`.
 ## FastMCP and FastAPI Integration
 
 This application leverages **FastMCP** integrated with **FastAPI** to provide both the MCP server and custom REST endpoints on the same port (8000). The MCP server uses a `sse` (Server-Sent Events) transport when used with **FastAPI**.
-- **`src/mcp_repl/server.py`**: Defines the `FastMCP` server, registers the `python_interpreter` tool (which dynamically executes Python 3 code and captures standard output) and the `list_files` tool (which discovers PDF documents), and configures the `streamable-http` transport.
+- **`src/mcp_repl/server.py`**: Defines the `FastMCP` server, registers the `python_interpreter` tool (which dynamically executes Python 3 code and captures standard output, utilizing `typing.Annotated` for descriptive argument types) and the `list_files` tool (which discovers PDF documents), and configures the `streamable-http` transport.
 - **`src/mcp_repl/api.py`**: A FastAPI application that provides additional endpoints (`/upload` for PDF ingestion and validation, `GET /files` for listing and `DELETE /files/{filename}` for deleting ingested PDF documents, `/status` for health checks) and mounts the FastMCP server's SSE application at the `/mcp` route.
 
 > [!WARNING]
