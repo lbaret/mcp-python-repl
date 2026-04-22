@@ -5,6 +5,7 @@ import traceback
 from typing import Annotated
 
 from mcp.server.fastmcp import FastMCP
+from pydantic import Field
 
 # Create an MCP server
 mcp = FastMCP("Python-REPL", json_response=True, port=8000, host="0.0.0.0")
@@ -12,7 +13,7 @@ mcp = FastMCP("Python-REPL", json_response=True, port=8000, host="0.0.0.0")
 # Python REPL tool
 @mcp.tool()
 def python_interpreter(
-    code: Annotated[str, "The valid Python code block to execute."],
+    code: Annotated[str, Field(description="The valid Python code block to execute.")],
 ) -> str:
     """
     # Python REPL Execution Tool
