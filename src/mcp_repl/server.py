@@ -32,6 +32,13 @@ def python_interpreter(
     5. **Data Access**: You can access, read, and manipulate documents stored in the `/app/data` folder. Use standard Python libraries (like `os`, `pathlib`, etc.) to interact with these files.
     6. **Formatting**: Ensure the `code` string is well-formatted, standard Python 3 code with proper indentation.
 
+    ## Installed Packages
+
+    The following packages are available for use:
+    - `pdfplumber`
+    - `pymupdf`
+    - `pypdf`
+
     ## Arguments
 
     - `code` (str): The valid Python code block to execute.
